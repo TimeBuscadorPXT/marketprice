@@ -31,7 +31,7 @@ function buildSearchUrl(query: string): string {
   return `https://lista.mercadolivre.com.br/${encodedQuery}_Filt_ITEM_CONDITION_2230284_OrderId_PRICE_NoIndex_True`;
 }
 
-function extractPrices(html: string, baseUrl: string): ScrapedRetailPrice[] {
+function extractPrices(html: string, _baseUrl: string): ScrapedRetailPrice[] {
   const results: ScrapedRetailPrice[] = [];
 
   // Split by product card sections — ML uses article or li elements
