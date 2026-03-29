@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import { getPriceAnalysis, type PriceAnalysis as PriceAnalysisType } from '@/services/prices';
 import { getVelocity, getSellers, getMarketHealth, getListingQuality, type VelocityData, type SellersResponse, type MarketHealthData, type ListingQualityData } from '@/services/analytics';
+import { getRetailComparison, type RetailPriceComparison } from '@/services/retail-prices';
+import { RetailComparison } from '@/components/shared/RetailComparison';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, formatDateShort, cn } from '@/lib/utils';
 import { ModelSelector } from '@/components/shared/ModelSelector';
@@ -163,6 +165,12 @@ export default function Analysis() {
     queryFn: () => getModelSummary(modelId, region),
     enabled: canQuery,
     staleTime: 300000,
+  });
+
+  const { data: retailData } = useQuery<RetailPriceComparison>({
+    queryKey: ['retail-comparison', modelId, analysis?.average],
+    queryFn: () => getRetailComparison(modelId!, analysis?.average ?? 0),
+    enabled: !!modelId && !!analysis?.average,
   });
 
   // Get model name for MarketInsight
@@ -307,6 +315,22 @@ export default function Analysis() {
                 <span className="text-lg shrink-0">🧠</span>
                 <p className="text-sm leading-relaxed text-[#f0f0f5]/70">{modelSummary.summary}</p>
               </div>
+            </Card>
+          )}
+
+          {/* Retail price comparison */}
+          {retailData?.retailPrice && (
+            <Card>
+              <h3 className="mb-3 text-sm font-semibold text-[#f0f0f5]/70">
+                Comparação com Varejo (Novo Lacrado)
+              </h3>
+              <RetailComparison
+                usedPrice={analysis?.average ?? 0}
+                retailPrice={retailData.retailPrice}
+                retailDiscount={retailData.discount}
+                retailVerdict={retailData.verdictLabel}
+                retailUrl={retailData.retailUrl}
+              />
             </Card>
           )}
 
