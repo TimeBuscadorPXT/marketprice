@@ -38,6 +38,10 @@ interface DealResult {
   redFlags: string[];
   greenFlags: string[];
   aiRecommendation: string | null;
+  retailPrice: number | null;
+  retailDiscount: number | null;
+  retailVerdict: string | null;
+  retailUrl: string | null;
 }
 
 interface DealsResponse {
@@ -261,7 +265,41 @@ export async function getDeals(query: DealsQuery): Promise<DealsResponse> {
         redFlags: listing.redFlags,
         greenFlags: listing.greenFlags,
         aiRecommendation: listing.aiRecommendation,
+        retailPrice: null,
+        retailDiscount: null,
+        retailVerdict: null,
+        retailUrl: null,
       });
+    }
+  }
+
+  // Enrich with retail prices
+  const modelIds = [...new Set(allDeals.map(d => d.model.id))];
+  if (modelIds.length > 0) {
+    const retailPrices = await prisma.retailPrice.findMany({
+      where: {
+        modelId: { in: modelIds },
+        isActive: true,
+        fetchedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+      },
+      orderBy: { price: 'asc' },
+      distinct: ['modelId'],
+    });
+    const retailMap = new Map(retailPrices.map(rp => [rp.modelId, rp]));
+
+    for (const deal of allDeals) {
+      const rp = retailMap.get(deal.model.id);
+      if (rp) {
+        const rpPrice = Number(rp.price);
+        const discPct = ((rpPrice - deal.price) / rpPrice) * 100;
+        deal.retailPrice = rpPrice;
+        deal.retailDiscount = Math.round(discPct * 10) / 10;
+        deal.retailUrl = rp.url;
+        if (discPct >= 40) deal.retailVerdict = 'Oportunidade quente';
+        else if (discPct >= 25) deal.retailVerdict = 'Boa oportunidade';
+        else if (discPct >= 15) deal.retailVerdict = 'Margem apertada';
+        else deal.retailVerdict = 'Não compensa — próximo do novo';
+      }
     }
   }
 

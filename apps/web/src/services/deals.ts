@@ -31,6 +31,10 @@ export interface Deal {
   redFlags?: string[];
   greenFlags?: string[];
   aiRecommendation?: string | null;
+  retailPrice?: number | null;
+  retailDiscount?: number | null;
+  retailVerdict?: string | null;
+  retailUrl?: string | null;
 }
 
 export interface DealsSummary {
