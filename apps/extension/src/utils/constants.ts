@@ -1,7 +1,7 @@
 declare const __API_URL__: string | undefined;
 
 export const API_BASE_URL =
-  typeof __API_URL__ !== 'undefined' ? __API_URL__ : 'http://localhost:3001/api';
+  typeof __API_URL__ !== 'undefined' ? __API_URL__ : 'https://marketpricebr.com/api';
 
 export const BATCH_SIZE = 5;
 export const BATCH_INTERVAL_MS = 10_000;

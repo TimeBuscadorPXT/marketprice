@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Captura e analisa precos do Facebook Marketplace para revendedores de celulares",
   "permissions": ["activeTab", "storage", "alarms"],
-  "host_permissions": ["*://www.facebook.com/*"],
+  "host_permissions": ["*://www.facebook.com/*", "*://marketpricebr.com/*", "*://www.marketpricebr.com/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
@@ -13,6 +13,11 @@
     {
       "matches": ["*://www.facebook.com/*"],
       "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://marketpricebr.com/*", "*://www.marketpricebr.com/*", "*://localhost/*"],
+      "js": ["auth-bridge.js"],
       "run_at": "document_idle"
     }
   ],

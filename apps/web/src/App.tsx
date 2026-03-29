@@ -1,10 +1,13 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { Toaster } from '@/components/ui/Toast';
 import { Spinner } from '@/components/ui/Spinner';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 const Landing = lazy(() => import('@/pages/Landing'));
 const Login = lazy(() => import('@/pages/Login'));
@@ -75,9 +78,11 @@ function AppRoutes() {
 
 export function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-      <Toaster position="top-right" />
-    </AuthProvider>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <AuthProvider>
+        <AppRoutes />
+        <Toaster position="top-right" />
+      </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }

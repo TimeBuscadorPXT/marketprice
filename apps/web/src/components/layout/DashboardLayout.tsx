@@ -3,6 +3,8 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { AiChatDrawer } from '@/components/shared/AiChatDrawer';
+import { OnboardingModal } from '@/components/shared/OnboardingModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DashboardLayoutProps {
   title?: string;
@@ -10,6 +12,10 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ title = 'Dashboard' }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+
+  const showOnboarding = !onboardingDismissed && user && !user.onboardingDone;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -24,6 +30,11 @@ export function DashboardLayout({ title = 'Dashboard' }: DashboardLayoutProps) {
       </div>
 
       <AiChatDrawer />
+
+      <OnboardingModal
+        open={!!showOnboarding}
+        onClose={() => setOnboardingDismissed(true)}
+      />
     </div>
   );
 }

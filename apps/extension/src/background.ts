@@ -1,5 +1,5 @@
 import { MESSAGE_TYPES, STORAGE_KEYS } from './utils/constants';
-import { sendListings, sendDeepUpdate, login, isAuthenticated } from './services/api';
+import { sendListings, sendDeepUpdate, isAuthenticated } from './services/api';
 import { getSessionStats, saveSessionStats, clearAll, getIsPaused, setIsPaused } from './services/storage';
 import type { SessionStats } from './services/storage';
 import type { ScrapedListing } from './services/scraper';
@@ -122,19 +122,6 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
         return true;
       }
       sendResponse({ status: 'empty' });
-      break;
-
-    case MESSAGE_TYPES.LOGIN:
-      if (msg.email && msg.password) {
-        login(msg.email, msg.password)
-          .then((result) => sendResponse(result))
-          .catch((err) => {
-            log('error', 'Erro no login', err);
-            sendResponse({ success: false, error: 'Erro interno' });
-          });
-        return true;
-      }
-      sendResponse({ success: false, error: 'Email e senha obrigatorios' });
       break;
 
     case MESSAGE_TYPES.LOGOUT:

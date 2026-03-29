@@ -7,10 +7,7 @@ interface StatusResponse {
   paused: boolean;
 }
 
-interface LoginResponse {
-  success: boolean;
-  error?: string;
-}
+const DASHBOARD_URL = 'https://marketpricebr.com';
 
 function $(id: string): HTMLElement | null {
   return document.getElementById(id);
@@ -50,10 +47,21 @@ function animateCount(el: HTMLElement, target: number): void {
   }, 30);
 }
 
+function getInitials(name: string): string {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  const first = parts[0]?.charAt(0) ?? '?';
+  if (parts.length >= 2) {
+    const last = parts[parts.length - 1]?.charAt(0) ?? '';
+    return (first + last).toUpperCase();
+  }
+  return first.toUpperCase();
+}
+
 async function renderStatus(): Promise<void> {
   const loginSection = $('login-section');
   const dashSection = $('dash-section');
-  const loginError = $('login-error');
 
   const status = await sendMessage<StatusResponse>({ type: MESSAGE_TYPES.GET_STATUS });
 
@@ -65,7 +73,24 @@ async function renderStatus(): Promise<void> {
 
   hide(loginSection);
   show(dashSection);
-  if (loginError) loginError.textContent = '';
+
+  // Show user info
+  const userInfoEl = $('user-info');
+  const userAvatarEl = $('user-avatar');
+  const userNameEl = $('user-name');
+
+  try {
+    const stored = await chrome.storage.local.get(STORAGE_KEYS.USER);
+    const user = stored[STORAGE_KEYS.USER] as { name?: string; email?: string } | null;
+    if (user && (user.name || user.email)) {
+      const displayName = user.name || user.email || 'Usuário';
+      if (userAvatarEl) userAvatarEl.textContent = getInitials(displayName);
+      if (userNameEl) userNameEl.textContent = displayName;
+      show(userInfoEl);
+    }
+  } catch {
+    // ignore
+  }
 
   // Status indicator
   const statusDot = $('status-dot');
@@ -144,42 +169,14 @@ async function renderStatus(): Promise<void> {
 document.addEventListener('DOMContentLoaded', () => {
   renderStatus();
 
-  // Login form
-  const loginForm = $('login-form') as HTMLFormElement | null;
-  const loginBtn = $('btn-login');
-  const loginError = $('login-error');
-
-  loginForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (loginBtn) {
-      loginBtn.textContent = 'Entrando...';
-      loginBtn.setAttribute('disabled', 'true');
-    }
-
-    const email = (($('input-email') as HTMLInputElement)?.value ?? '').trim();
-    const password = (($('input-password') as HTMLInputElement)?.value ?? '').trim();
-
-    const result = await sendMessage<LoginResponse>({
-      type: MESSAGE_TYPES.LOGIN,
-      email,
-      password,
-    });
-
-    if (result.success) {
-      await renderStatus();
-    } else {
-      if (loginError) loginError.textContent = result.error ?? 'Erro no login';
-    }
-
-    if (loginBtn) {
-      loginBtn.textContent = 'Entrar';
-      loginBtn.removeAttribute('disabled');
-    }
+  // Open login page button
+  $('btn-open-login')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: `${DASHBOARD_URL}/login` });
   });
 
   // Dashboard button
   $('btn-dashboard')?.addEventListener('click', () => {
-    chrome.tabs.create({ url: 'http://localhost:5173' });
+    chrome.tabs.create({ url: DASHBOARD_URL });
   });
 
   // Pause toggle
@@ -188,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await renderStatus();
   });
 
-  // Logout
+  // Logout (disconnect extension)
   $('btn-logout')?.addEventListener('click', async () => {
     await sendMessage({ type: MESSAGE_TYPES.LOGOUT });
     await renderStatus();

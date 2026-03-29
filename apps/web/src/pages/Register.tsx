@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
@@ -16,10 +17,25 @@ interface RegisterForm {
 
 export default function Register() {
   useDocumentTitle('Cadastro');
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  async function handleGoogleSuccess(credentialResponse: { credential?: string }) {
+    if (!credentialResponse.credential) return;
+    try {
+      setError('');
+      setLoading(true);
+      await loginWithGoogle(credentialResponse.credential);
+      navigate('/');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao entrar com Google.';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const {
     register,
@@ -115,6 +131,27 @@ export default function Register() {
           <Button type="submit" loading={loading} className="w-full">
             Criar conta
           </Button>
+
+          <div className="relative my-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#f0f0f5]/10" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-[#12121a] px-3 text-[#f0f0f5]/40">ou</span>
+            </div>
+          </div>
+
+          <div className="flex justify-center [&_iframe]:!rounded-lg">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Erro ao criar conta com Google.')}
+              theme="filled_black"
+              size="large"
+              width="100%"
+              text="signup_with"
+              locale="pt-BR"
+            />
+          </div>
 
           <p className="text-center text-sm text-[#f0f0f5]/50">
             Já tem conta?{' '}

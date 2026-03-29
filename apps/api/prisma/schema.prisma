@@ -11,8 +11,11 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String
-  password  String
-  region    String   @default("")
+  password  String?
+  googleId  String?  @unique @map("google_id")
+  avatar          String?
+  region          String   @default("")
+  onboardingDone  Boolean  @default(false) @map("onboarding_done")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

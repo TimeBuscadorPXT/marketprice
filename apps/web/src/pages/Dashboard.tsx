@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Zap, Target, Activity, Flame } from 'lucide-react';
-import { OnboardingModal } from '@/components/shared/OnboardingModal';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAuth } from '@/contexts/AuthContext';
 import { getPriceSummary, getAvailableRegions, type PriceSummary } from '@/services/prices';
@@ -24,7 +23,6 @@ export default function Dashboard() {
   useDocumentTitle('Dashboard');
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('mp_onboarding_done'));
   const [category, setCategory] = useState('phone');
   const [brand, setBrand] = useState('');
   const [region, setRegion] = useState('');
@@ -317,7 +315,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
     </div>
   );
 }

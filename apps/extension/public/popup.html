@@ -9,7 +9,7 @@
 
       body {
         width: 320px;
-        min-height: 400px;
+        min-height: 360px;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         background: #0a0a0f;
         color: #e4e4e7;
@@ -76,6 +76,37 @@
         font-size: 12px;
         color: #a1a1aa;
         font-weight: 500;
+      }
+
+      /* User info */
+      .user-info {
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #12121a;
+        border-bottom: 1px solid #1a1a26;
+      }
+      .user-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #22c55e20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: #22c55e;
+        flex-shrink: 0;
+      }
+      .user-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #fafafa;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       /* Capture mode */
@@ -159,7 +190,6 @@
         font-size: 12px;
       }
       .btn-danger:hover { color: #ef4444; }
-
       .btn-row {
         display: flex;
         gap: 8px;
@@ -168,47 +198,44 @@
 
       /* Login section */
       .login-section {
-        padding: 24px 20px;
+        padding: 32px 20px;
+        text-align: center;
+      }
+      .login-icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 16px;
+        background: #22c55e10;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .login-icon svg {
+        width: 28px;
+        height: 28px;
+        stroke: #22c55e;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .login-section h2 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #fafafa;
+        margin-bottom: 8px;
       }
       .login-section p {
         font-size: 13px;
         color: #71717a;
-        margin-bottom: 16px;
         line-height: 1.5;
+        margin-bottom: 24px;
       }
-      .input-group {
-        margin-bottom: 12px;
-      }
-      .input-group label {
-        display: block;
+      .login-section .hint {
         font-size: 11px;
-        color: #a1a1aa;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 6px;
-      }
-      .input-group input {
-        width: 100%;
-        padding: 10px 12px;
-        background: #12121a;
-        border: 1px solid #27272a;
-        border-radius: 8px;
-        color: #fafafa;
-        font-size: 13px;
-        outline: none;
-        transition: border-color 0.2s;
-      }
-      .input-group input:focus {
-        border-color: #22c55e;
-        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
-      }
-      .input-group input::placeholder { color: #3f3f46; }
-      .login-error {
-        color: #ef4444;
-        font-size: 12px;
-        margin-bottom: 12px;
-        min-height: 16px;
+        color: #52525b;
+        margin-top: 12px;
       }
     </style>
   </head>
@@ -219,25 +246,25 @@
       <h1>Market<span>Price</span></h1>
     </div>
 
-    <!-- Login Section -->
+    <!-- Login Section (not authenticated) -->
     <div id="login-section" class="login-section" style="display: none;">
-      <p>Faca login para comecar a capturar anuncios do Marketplace.</p>
-      <form id="login-form">
-        <div class="input-group">
-          <label for="input-email">Email</label>
-          <input type="email" id="input-email" placeholder="seu@email.com" required />
-        </div>
-        <div class="input-group">
-          <label for="input-password">Senha</label>
-          <input type="password" id="input-password" placeholder="••••••" required />
-        </div>
-        <div id="login-error" class="login-error"></div>
-        <button type="submit" id="btn-login" class="btn btn-primary">Entrar</button>
-      </form>
+      <div class="login-icon">
+        <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      </div>
+      <h2>Faca login para comecar</h2>
+      <p>Entre no MarketPrice pelo navegador para conectar a extensao e comecar a capturar precos.</p>
+      <button id="btn-open-login" class="btn btn-primary">Fazer login no MarketPrice</button>
+      <p class="hint">Funciona com email/senha ou Google</p>
     </div>
 
-    <!-- Dashboard Section -->
+    <!-- Dashboard Section (authenticated) -->
     <div id="dash-section" style="display: none;">
+      <!-- User info -->
+      <div id="user-info" class="user-info" style="display: none;">
+        <div id="user-avatar" class="user-avatar">?</div>
+        <span id="user-name" class="user-name">Carregando...</span>
+      </div>
+
       <!-- Status Bar -->
       <div class="status-bar">
         <div id="status-dot" class="status-dot"></div>
@@ -272,7 +299,7 @@
         <button id="btn-dashboard" class="btn btn-primary">Abrir Dashboard</button>
         <div class="btn-row">
           <button id="btn-pause" class="btn btn-secondary">Pausar</button>
-          <button id="btn-logout" class="btn btn-danger">Sair</button>
+          <button id="btn-logout" class="btn btn-danger">Desconectar</button>
         </div>
       </div>
     </div>

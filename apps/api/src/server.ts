@@ -4,8 +4,8 @@ import { prisma } from './lib/prisma';
 
 const PORT = Number(process.env.PORT) || 3001;
 
-const server = app.listen(PORT, () => {
-  console.log(`[API] Server running on http://localhost:${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[API] Server running on http://0.0.0.0:${PORT}`);
 });
 
 function gracefulShutdown(signal: string) {

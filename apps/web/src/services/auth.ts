@@ -24,7 +24,17 @@ export async function registerApi(name: string, email: string, password: string,
   return data.data;
 }
 
+export async function googleLoginApi(credential: string): Promise<AuthResponse> {
+  const { data } = await api.post('/auth/google', { credential });
+  return data.data;
+}
+
 export async function getMeApi(): Promise<User> {
   const { data } = await api.get('/auth/me');
+  return data.data;
+}
+
+export async function completeOnboardingApi(region?: string): Promise<User> {
+  const { data } = await api.post('/auth/onboarding/complete', { region });
   return data.data;
 }

@@ -25,7 +25,9 @@ const registerLimiter = rateLimit({
 
 router.post('/register', registerLimiter, validate(registerSchema), authController.register);
 router.post('/login', loginLimiter, validate(loginSchema), authController.login);
+router.post('/google', loginLimiter, authController.googleLogin);
 router.post('/refresh', validate(refreshTokenSchema), authController.refresh);
 router.get('/me', authenticate, authController.getMe);
+router.post('/onboarding/complete', authenticate, authController.completeOnboarding);
 
 export default router;
