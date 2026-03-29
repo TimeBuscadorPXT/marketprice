@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  region    String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  listings   Listing[]
+  suppliers  Supplier[]
+  alertRules AlertRule[]
+
+  @@map("users")
+}
+
+model Product {
+  id       String   @id @default(uuid())
+  category String   @default("phone")
+  brand    String
+  name     String
+  variant  String   @default("")
+  aliases  String[]
+
+  listings       Listing[]
+  suppliers      Supplier[]
+  listingHistory ListingHistory[]
+  alertRules     AlertRule[]
+
+  @@unique([category, brand, name, variant])
+  @@index([category, brand])
+  @@map("products")
+}
+
+model Listing {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  modelId       String    @map("model_id")
+  title         String
+  price         Decimal   @db.Decimal(10, 2)
+  region        String
+  publishedAt   DateTime? @map("published_at")
+  fbUrl         String    @map("fb_url")
+  condition     String?
+  imageUrl      String?   @map("image_url")
+  capturedAt    DateTime  @default(now()) @map("captured_at")
+  isOutlier     Boolean   @default(false) @map("is_outlier")
+  description   String?
+  sellerName    String?   @map("seller_name")
+  photoCount    Int?      @map("photo_count")
+  publishedText String?   @map("published_text")
+  daysOnMarket  Int?      @map("days_on_market")
+  hasShipping      Boolean?  @default(false) @map("has_shipping")
+  status           String?   @default("active")
+  firstSeenAt      DateTime  @default(now()) @map("first_seen_at")
+  lastSeenAt       DateTime  @default(now()) @map("last_seen_at")
+  isActive         Boolean   @default(true) @map("is_active")
+  fullDescription  String?   @map("full_description")
+  photoUrls        String[]  @map("photo_urls")
+  sellerProfileUrl String?   @map("seller_profile_url")
+  sellerJoinDate   String?   @map("seller_join_date")
+  sellerLocation   String?   @map("seller_location")
+  listedCategory   String?   @map("listed_category")
+  isDeepCaptured   Boolean   @default(false) @map("is_deep_captured")
+  healthScore      Int?      @map("health_score")
+  redFlags         String[]  @map("red_flags")
+  greenFlags       String[]  @map("green_flags")
+  flagLevel        String?   @map("flag_level")
+  valueReduction   Int?      @map("value_reduction")
+  aiAnalysis       String?   @map("ai_analysis")
+  aiRecommendation String?   @map("ai_recommendation")
+
+  user    User             @relation(fields: [userId], references: [id])
+  model   Product          @relation(fields: [modelId], references: [id])
+  history ListingHistory[]
+
+  @@index([modelId, region])
+  @@index([capturedAt])
+  @@index([userId])
+  @@index([isActive, modelId, region])
+  @@map("listings")
+}
+
+model ListingHistory {
+  id         String   @id @default(uuid())
+  listingId  String   @map("listing_id")
+  fbUrl      String   @map("fb_url")
+  modelId    String?  @map("model_id")
+  price      Decimal  @db.Decimal(10, 2)
+  region     String
+  status     String
+  oldPrice   Decimal? @db.Decimal(10, 2) @map("old_price")
+  recordedAt DateTime @default(now()) @map("recorded_at")
+
+  listing Listing     @relation(fields: [listingId], references: [id])
+  model   Product?    @relation(fields: [modelId], references: [id])
+
+  @@index([modelId, region])
+  @@index([recordedAt])
+  @@map("listing_history")
+}
+
+model Supplier {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  modelId   String   @map("model_id")
+  name      String
+  price     Decimal  @db.Decimal(10, 2)
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User       @relation(fields: [userId], references: [id])
+  model Product    @relation(fields: [modelId], references: [id])
+
+  @@index([userId])
+  @@index([modelId])
+  @@map("suppliers")
+}
+
+model AlertRule {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  name        String
+  modelId     String?  @map("model_id")
+  region      String
+  condition   String   // "price_below", "price_above", "new_deal_hot", "price_drop"
+  threshold   Decimal? @db.Decimal(10, 2)  // price threshold for price_below/price_above
+  channel     String   // "telegram", "email", "both"
+  isActive    Boolean  @default(true) @map("is_active")
+  lastTriggered DateTime? @map("last_triggered")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user  User        @relation(fields: [userId], references: [id])
+  model Product?   @relation(fields: [modelId], references: [id])
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("alert_rules")
+}
