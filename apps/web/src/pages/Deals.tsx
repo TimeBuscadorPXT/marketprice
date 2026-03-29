@@ -19,7 +19,9 @@ import {
   Tag,
   FileText,
   Image,
+  ShoppingBag,
 } from 'lucide-react';
+import { RetailComparison } from '@/components/shared/RetailComparison';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDeals, type Deal } from '@/services/deals';
@@ -264,6 +266,15 @@ function DealDetailModal({ deal, onClose }: { deal: Deal; onClose: () => void })
               <p className="font-mono text-lg font-bold text-[#22c55e]">{formatCurrency(Math.max(0, estimatedProfit))}</p>
             </div>
           </div>
+
+          {/* Retail comparison */}
+          <RetailComparison
+            usedPrice={deal.price}
+            retailPrice={deal.retailPrice ?? null}
+            retailDiscount={deal.retailDiscount ?? null}
+            retailVerdict={deal.retailVerdict ?? null}
+            retailUrl={deal.retailUrl ?? null}
+          />
 
           {/* Info grid */}
           <div className="grid grid-cols-2 gap-3">
@@ -513,6 +524,21 @@ function DealCard({
                 ⚠️ {flag}
               </span>
             ))}
+          </div>
+        )}
+
+        {/* Retail price indicator */}
+        {deal.retailPrice != null && deal.retailDiscount != null && (
+          <div className="mt-2 flex items-center gap-1.5">
+            <ShoppingBag className="h-3 w-3 text-[#60a5fa]" />
+            <span className="text-[10px] text-[#f0f0f5]/40">
+              Novo: {formatCurrency(deal.retailPrice)} ({Math.round(deal.retailDiscount)}% abaixo)
+            </span>
+            {deal.retailDiscount < 15 && (
+              <span className="rounded bg-[#f87171]/10 px-1 py-0.5 text-[9px] font-medium text-[#f87171]">
+                Próximo do novo
+              </span>
+            )}
           </div>
         )}
 
