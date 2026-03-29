@@ -13,13 +13,8 @@ function isOutlier(price: number, category: string): boolean {
   return price < config.outlierMin || price > config.outlierMax;
 }
 
-type ExtendedNormalizeResult = ReturnType<typeof normalizeTitle> & {
-  variant?: string;
-  category?: string;
-};
-
 async function resolveModelIdFromTitle(title: string): Promise<string | null> {
-  const normalized = normalizeTitle(title) as ExtendedNormalizeResult;
+  const normalized = normalizeTitle(title);
   if (!normalized) return null;
 
   // Try exact match first
@@ -27,7 +22,7 @@ async function resolveModelIdFromTitle(title: string): Promise<string | null> {
     where: {
       brand: { equals: normalized.brand, mode: 'insensitive' },
       name: { equals: normalized.name, mode: 'insensitive' },
-      variant: { equals: normalized.variant ?? normalized.storage ?? '', mode: 'insensitive' },
+      variant: { equals: normalized.variant, mode: 'insensitive' },
     },
     select: { id: true },
   });
@@ -39,8 +34,8 @@ async function resolveModelIdFromTitle(title: string): Promise<string | null> {
     data: {
       brand: normalized.brand,
       name: normalized.name,
-      variant: normalized.variant ?? normalized.storage ?? '',
-      category: normalized.category ?? 'phone',
+      variant: normalized.variant,
+      category: normalized.category,
     },
     select: { id: true },
   });
