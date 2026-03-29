@@ -1,16 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "MarketPrice",
+  "name": "MarketPrice - Analise de Precos",
   "version": "1.0.0",
-  "description": "Captura e analisa precos do Facebook Marketplace",
-  "permissions": ["activeTab", "storage"],
+  "description": "Captura e analisa precos do Facebook Marketplace para revendedores de celulares",
+  "permissions": ["activeTab", "storage", "alarms"],
+  "host_permissions": ["*://www.facebook.com/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
   },
   "content_scripts": [
     {
-      "matches": ["*://www.facebook.com/marketplace/*"],
+      "matches": ["*://www.facebook.com/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }

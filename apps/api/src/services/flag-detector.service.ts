@@ -21,7 +21,7 @@ const RED_FLAG_RULES: FlagRule[] = [
   { keywords: ['face id não funciona', 'sem face id', 'face id queimado'], label: 'Face ID com defeito', scoreImpact: -25, valueReduction: 30 },
   { keywords: ['câmera com defeito', 'câmera tremendo', 'câmera embaçada', 'camera com defeito', 'camera tremendo', 'camera embaçada'], label: 'Câmera com defeito', scoreImpact: -20, valueReduction: 25 },
   { keywords: ['caiu na água', 'entrou água', 'oxidado', 'entrou agua', 'caiu na agua'], label: 'Dano por água/oxidação', scoreImpact: -25, valueReduction: 35 },
-  { keywords: ['com defeito', 'não liga', 'nao liga', 'travando', 'fantasma', 'ghost touch', 'mancha na tela', 'trincado', 'rachado'], label: 'Defeito grave', scoreImpact: -25, valueReduction: 40 },
+  { keywords: ['com defeito', 'não liga', 'nao liga', 'travando', 'fantasma', 'ghost touch', 'mancha na tela'], label: 'Defeito grave', scoreImpact: -25, valueReduction: 40 },
   { keywords: ['bloqueado', 'icloud ativo', 'conta vinculada'], label: 'Bloqueio de conta', scoreImpact: -25, valueReduction: 40 },
 ];
 
@@ -29,6 +29,7 @@ const YELLOW_FLAG_RULES: FlagRule[] = [
   { keywords: ['tela trocada por original'], label: 'Tela trocada (original)', scoreImpact: -5, valueReduction: 5 },
   { keywords: ['bateria 80', 'bateria 85'], label: 'Bateria com saúde mediana', scoreImpact: -5, valueReduction: 5 },
   { keywords: ['arranhão', 'arranhao', 'marca de uso'], label: 'Marcas de uso', scoreImpact: -5, valueReduction: 8 },
+  { keywords: ['trinco', 'trinca', 'trincado', 'trincada', 'rachado', 'rachada', 'rachadura'], label: 'Trinco/rachado na tela', scoreImpact: -10, valueReduction: 15 },
   { keywords: ['sem caixa', 'sem acessórios', 'sem acessorios'], label: 'Sem acessórios/caixa', scoreImpact: -5, valueReduction: 5 },
   { keywords: ['vendo urgente'], label: 'Venda urgente', scoreImpact: -10, valueReduction: 10 },
 ];

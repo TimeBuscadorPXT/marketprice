@@ -32,6 +32,7 @@ module.exports = {
     }),
   ],
   optimization: {
-    minimize: true,
+    minimize: false, // Keep readable for debugging in dev
   },
+  devtool: 'cheap-module-source-map',
 };

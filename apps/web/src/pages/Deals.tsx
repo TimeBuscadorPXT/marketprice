@@ -96,6 +96,28 @@ function formatPercentBR(value: number): string {
   return `${value.toFixed(1).replace('.', ',')}%`;
 }
 
+function formatTimeOnMarket(days: number | null | undefined): string {
+  if (days == null) return 'Desconhecido';
+  if (days === 0) return 'Publicado hoje';
+  if (days === 1) return 'Publicado ontem';
+  if (days < 7) return `${days} dias`;
+  if (days < 30) {
+    const weeks = Math.floor(days / 7);
+    return `${weeks} semana${weeks > 1 ? 's' : ''}`;
+  }
+  const months = Math.floor(days / 30);
+  return `${months} ${months > 1 ? 'meses' : 'mês'}`;
+}
+
+function formatTimeShort(days: number | null | undefined): string {
+  if (days == null) return '?';
+  if (days === 0) return 'Hoje';
+  if (days === 1) return 'Ontem';
+  if (days < 7) return `${days}d`;
+  if (days < 30) return `${Math.floor(days / 7)}sem`;
+  return `${Math.floor(days / 30)}m`;
+}
+
 function ScoreBar({ score, heat }: { score: number; heat: Deal['heat'] }) {
   const style = heatStyles[heat];
   const [width, setWidth] = useState(0);
@@ -290,7 +312,7 @@ function DealDetailModal({ deal, onClose }: { deal: Deal; onClose: () => void })
               <div>
                 <p className="text-[10px] text-[#f0f0f5]/40">Tempo no mercado</p>
                 <p className="text-xs font-medium text-[#f0f0f5]">
-                  {deal.daysOnMarket === null ? 'Desconhecido' : deal.daysOnMarket === 0 ? 'Publicado hoje' : `${deal.daysOnMarket} dias`}
+                  {formatTimeOnMarket(deal.daysOnMarket)}
                 </p>
               </div>
             </div>
@@ -465,7 +487,7 @@ function DealCard({
                   <>
                     <span className="text-[#f0f0f5]/20">•</span>
                     <Clock className="h-3 w-3 shrink-0" />
-                    <span>{deal.daysOnMarket === 0 ? 'Hoje' : `${deal.daysOnMarket}d`}</span>
+                    <span>{formatTimeShort(deal.daysOnMarket)}</span>
                   </>
                 )}
               </p>

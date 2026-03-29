@@ -246,7 +246,7 @@ export async function deepUpdateListing(userId: string, input: DeepUpdateInput) 
 
   const existing = await prisma.listing.findFirst({
     where: { fbUrl, userId },
-    select: { id: true },
+    select: { id: true, title: true },
   });
 
   if (!existing) {
@@ -269,6 +269,16 @@ export async function deepUpdateListing(userId: string, input: DeepUpdateInput) 
   if (listedCategory != null) updateData.listedCategory = listedCategory;
   if (condition != null) updateData.condition = condition;
   if (hasShipping != null) updateData.hasShipping = hasShipping;
+
+  // Re-analyze flags with full description (may catch issues not in title)
+  if (fullDescription) {
+    const flags = analyzeListingText(existing.title, fullDescription);
+    updateData.healthScore = flags.healthScore;
+    updateData.redFlags = flags.redFlags;
+    updateData.greenFlags = flags.greenFlags;
+    updateData.flagLevel = flags.flagLevel;
+    updateData.valueReduction = flags.valueReduction;
+  }
 
   await prisma.listing.update({
     where: { id: existing.id },

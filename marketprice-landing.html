@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketPrice — Saiba exatamente quanto cobrar por cada celular</title>
+<meta name="description" content="Ferramenta inteligente para revendedores de celulares seminovos. Preços de mercado em tempo real, detector de oportunidades e comparador com varejo. 30 dias grátis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#06080d;--bg2:#0b0f18;--bg3:#111827;
+--green:#22c55e;--green-glow:#22c55e40;
+--blue:#3b82f6;--amber:#f59e0b;--red:#ef4444;
+--text:#f0f0f5;--text2:#94a3b8;--text3:#475569;
+--border:#1e293b;
+--font-display:'Cabinet Grotesk',sans-serif;
+--font-body:'Instrument Sans',sans-serif;
+--font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{font-family:var(--font-body);color:var(--text);background:var(--bg);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:var(--green);color:var(--bg)}
+
+/* ===== NOISE OVERLAY ===== */
+body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.035;
+background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ===== UTILITIES ===== */
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:100px;font-size:13px;font-weight:500;font-family:var(--font-mono);letter-spacing:-.02em}
+.badge-green{background:var(--green-glow);color:var(--green);border:1px solid #22c55e30}
+.section-label{font-family:var(--font-mono);font-size:12px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--green);margin-bottom:16px}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes countUp{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px var(--green-glow)}50%{box-shadow:0 0 40px var(--green-glow),0 0 80px #22c55e20}}
+
+.reveal{opacity:0;transform:translateY(30px);transition:all .8s cubic-bezier(.16,1,.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ===== NAV ===== */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);background:rgba(6,8,13,.8);border-bottom:1px solid #ffffff08;transition:all .3s}
+nav.scrolled{padding:12px 0;background:rgba(6,8,13,.95)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-family:var(--font-display);font-weight:800;font-size:22px;letter-spacing:-.03em;color:var(--text)}
+.nav-logo span{color:var(--green)}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-links a{color:var(--text2);font-size:14px;text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 28px;border-radius:12px;font-family:var(--font-body);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;border:none;transition:all .25s cubic-bezier(.16,1,.3,1)}
+.btn-primary{background:var(--green);color:var(--bg);box-shadow:0 0 20px var(--green-glow)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 30px var(--green-glow),0 4px 20px rgba(0,0,0,.4)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--green);color:var(--green)}
+.btn-large{padding:18px 40px;font-size:16px;border-radius:14px}
+
+/* ===== HERO ===== */
+.hero{min-height:100vh;display:flex;align-items:center;position:relative;padding:120px 0 80px;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,#22c55e08 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-100px;left:-100px;width:400px;height:400px;background:radial-gradient(circle,#3b82f608 0%,transparent 70%);pointer-events:none}
+.hero-content{max-width:720px;animation:fadeUp .8s cubic-bezier(.16,1,.3,1) both}
+.hero-badge{animation:fadeUp .6s cubic-bezier(.16,1,.3,1) both;margin-bottom:28px}
+.hero-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.hero h1{font-family:var(--font-display);font-size:clamp(42px,6vw,72px);font-weight:900;line-height:1.05;letter-spacing:-.04em;margin-bottom:24px;animation:fadeUp .8s .1s cubic-bezier(.16,1,.3,1) both}
+.hero h1 .highlight{background:linear-gradient(135deg,var(--green),#4ade80);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:clamp(17px,2vw,20px);line-height:1.7;color:var(--text2);max-width:560px;margin-bottom:40px;animation:fadeUp .8s .2s cubic-bezier(.16,1,.3,1) both}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap;animation:fadeUp .8s .3s cubic-bezier(.16,1,.3,1) both}
+.hero-stats{display:flex;gap:48px;margin-top:64px;padding-top:32px;border-top:1px solid var(--border);animation:fadeUp .8s .5s cubic-bezier(.16,1,.3,1) both}
+.hero-stat{text-align:left}
+.hero-stat .number{font-family:var(--font-display);font-size:36px;font-weight:800;color:var(--green);letter-spacing:-.03em}
+.hero-stat .label{font-size:13px;color:var(--text3);margin-top:4px}
+
+/* ===== PROBLEM SECTION ===== */
+.problem{padding:120px 0;position:relative}
+.problem-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.problem-visual{position:relative}
+.problem-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:16px}
+.problem-card.bad{border-left:3px solid var(--red)}
+.problem-card.good{border-left:3px solid var(--green)}
+.problem-card .tag{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
+.problem-card .tag.red{color:var(--red)}
+.problem-card .tag.green{color:var(--green)}
+.problem-card .price{font-family:var(--font-display);font-size:28px;font-weight:800;letter-spacing:-.02em}
+.problem-card .desc{font-size:14px;color:var(--text2);margin-top:8px;line-height:1.6}
+.vs-badge{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--text2);margin:0 auto -8px;position:relative;z-index:2}
+.problem h2{font-family:var(--font-display);font-size:clamp(32px,4vw,48px);font-weight:800;line-height:1.1;letter-spacing:-.03em;margin-bottom:24px}
+.problem h2 .red{color:var(--red)}
+
+/* ===== FEATURES ===== */
+.features{padding:120px 0;background:var(--bg2);position:relative}
+.features::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+.features-header{text-align:center;max-width:600px;margin:0 auto 80px}
+.features-header h2{font-family:var(--font-display);font-size:clamp(32px,4vw,48px);font-weight:800;line-height:1.1;letter-spacing:-.03em;margin-bottom:16px}
+.features-header p{font-size:17px;color:var(--text2);line-height:1.7}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.feature-card{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:36px;transition:all .4s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden}
+.feature-card:hover{transform:translateY(-4px);border-color:#ffffff15;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),var(--blue));opacity:0;transition:opacity .3s}
+.feature-card:hover::before{opacity:1}
+.feature-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px}
+.feature-icon.green{background:#22c55e15;color:var(--green)}
+.feature-icon.blue{background:#3b82f615;color:var(--blue)}
+.feature-icon.amber{background:#f59e0b15;color:var(--amber)}
+.feature-icon.red{background:#ef444415;color:var(--red)}
+.feature-icon.purple{background:#a855f715;color:#a855f7}
+.feature-icon.teal{background:#14b8a615;color:#14b8a6}
+.feature-card h3{font-family:var(--font-display);font-size:20px;font-weight:700;letter-spacing:-.02em;margin-bottom:10px}
+.feature-card p{font-size:14px;color:var(--text2);line-height:1.7}
+
+/* ===== HOW IT WORKS ===== */
+.how{padding:120px 0}
+.how-header{text-align:center;max-width:600px;margin:0 auto 80px}
+.how-header h2{font-family:var(--font-display);font-size:clamp(32px,4vw,48px);font-weight:800;line-height:1.1;letter-spacing:-.03em;margin-bottom:16px}
+.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.how-step{text-align:center;padding:40px 28px}
+.step-number{font-family:var(--font-display);font-size:64px;font-weight:900;color:var(--green);opacity:.2;line-height:1;margin-bottom:20px}
+.how-step h3{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:12px}
+.how-step p{font-size:15px;color:var(--text2);line-height:1.7}
+
+/* ===== COMPARATOR DEMO ===== */
+.comparator{padding:120px 0;background:var(--bg2)}
+.comparator-header{text-align:center;max-width:700px;margin:0 auto 60px}
+.comparator-header h2{font-family:var(--font-display);font-size:clamp(32px,4vw,48px);font-weight:800;line-height:1.1;letter-spacing:-.03em;margin-bottom:16px}
+.demo-card{max-width:680px;margin:0 auto;background:var(--bg);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.demo-header{padding:24px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.demo-header h3{font-family:var(--font-display);font-size:18px;font-weight:700}
+.demo-body{padding:32px}
+.demo-row{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #ffffff06}
+.demo-row:last-child{border:none}
+.demo-label{font-size:14px;color:var(--text2)}
+.demo-value{font-family:var(--font-mono);font-size:16px;font-weight:500}
+.demo-value.green{color:var(--green)}
+.demo-value.red{color:var(--red)}
+.demo-value.amber{color:var(--amber)}
+.demo-verdict{margin-top:24px;padding:20px;border-radius:12px;text-align:center}
+.demo-verdict.bad{background:#ef444410;border:1px solid #ef444425}
+.demo-verdict.bad .verdict-text{color:var(--red);font-family:var(--font-display);font-weight:700;font-size:18px}
+.demo-verdict .verdict-desc{font-size:13px;color:var(--text2);margin-top:6px}
+
+/* ===== PRICING ===== */
+.pricing{padding:120px 0}
+.pricing-header{text-align:center;max-width:600px;margin:0 auto 60px}
+.pricing-header h2{font-family:var(--font-display);font-size:clamp(32px,4vw,48px);font-weight:800;line-height:1.1;letter-spacing:-.03em;margin-bottom:16px}
+.pricing-cards{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:800px;margin:0 auto}
+.pricing-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:40px;position:relative}
+.pricing-card.featured{border-color:var(--green);box-shadow:0 0 40px var(--green-glow)}
+.pricing-card.featured::before{content:'BETA GRATUITO';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--green);color:var(--bg);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:4px 16px;border-radius:100px;letter-spacing:.05em}
+.pricing-card .plan-name{font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--text2);margin-bottom:8px}
+.pricing-card .plan-price{font-family:var(--font-display);font-size:48px;font-weight:900;letter-spacing:-.04em}
+.pricing-card .plan-price span{font-size:16px;font-weight:400;color:var(--text3)}
+.pricing-card .plan-price .old{text-decoration:line-through;color:var(--text3);font-size:24px;font-weight:400;margin-right:8px}
+.pricing-card .plan-desc{font-size:14px;color:var(--text2);margin:16px 0 28px;line-height:1.6}
+.pricing-card ul{list-style:none;margin-bottom:32px}
+.pricing-card li{font-size:14px;color:var(--text2);padding:8px 0;display:flex;align-items:center;gap:10px}
+.pricing-card li::before{content:'✓';color:var(--green);font-weight:700;font-size:14px}
+
+/* ===== URGENCY ===== */
+.urgency{padding:80px 0;text-align:center}
+.urgency-box{background:linear-gradient(135deg,#22c55e08,#3b82f608);border:1px solid #22c55e20;border-radius:24px;padding:60px 40px;max-width:800px;margin:0 auto}
+.urgency-box h2{font-family:var(--font-display);font-size:clamp(28px,4vw,40px);font-weight:800;line-height:1.1;letter-spacing:-.03em;margin-bottom:16px}
+.urgency-box p{font-size:17px;color:var(--text2);margin-bottom:32px;line-height:1.7}
+.spots-counter{font-family:var(--font-mono);font-size:14px;color:var(--amber);margin-bottom:24px}
+.spots-bar{width:240px;height:6px;background:var(--bg3);border-radius:3px;margin:12px auto 0;overflow:hidden}
+.spots-bar .fill{height:100%;width:40%;background:linear-gradient(90deg,var(--green),var(--amber));border-radius:3px;animation:shimmer 2s infinite;background-size:200% 100%}
+
+/* ===== FAQ ===== */
+.faq{padding:80px 0 120px}
+.faq-header{text-align:center;margin-bottom:48px}
+.faq-header h2{font-family:var(--font-display);font-size:32px;font-weight:800;letter-spacing:-.03em}
+.faq-list{max-width:700px;margin:0 auto}
+.faq-item{border-bottom:1px solid var(--border);padding:24px 0;cursor:pointer}
+.faq-question{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-display);font-size:17px;font-weight:600}
+.faq-question::after{content:'+';font-size:24px;color:var(--text3);transition:transform .3s}
+.faq-item.open .faq-question::after{transform:rotate(45deg);color:var(--green)}
+.faq-answer{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.16,1,.3,1);font-size:15px;color:var(--text2);line-height:1.7}
+.faq-item.open .faq-answer{max-height:200px;padding-top:16px}
+
+/* ===== FOOTER ===== */
+footer{padding:48px 0;border-top:1px solid var(--border);text-align:center}
+footer p{font-size:13px;color:var(--text3)}
+footer a{color:var(--green);text-decoration:none}
+
+/* ===== FORM MODAL ===== */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(6,8,13,.85);backdrop-filter:blur(10px);align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:48px;max-width:480px;width:90%;position:relative;animation:fadeUp .4s cubic-bezier(.16,1,.3,1)}
+.modal-close{position:absolute;top:20px;right:20px;background:none;border:none;color:var(--text3);font-size:24px;cursor:pointer}
+.modal h2{font-family:var(--font-display);font-size:28px;font-weight:800;letter-spacing:-.03em;margin-bottom:8px}
+.modal p{font-size:14px;color:var(--text2);margin-bottom:28px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.form-group input,.form-group select{width:100%;padding:14px 16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-body);font-size:15px;transition:border-color .2s;outline:none}
+.form-group input:focus,.form-group select:focus{border-color:var(--green)}
+.form-group input::placeholder{color:var(--text3)}
+.form-submit{width:100%;margin-top:8px}
+.form-note{font-size:12px;color:var(--text3);text-align:center;margin-top:16px}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+.nav-links a:not(.btn){display:none}
+.hero-stats{flex-direction:column;gap:24px}
+.problem-grid{grid-template-columns:1fr;gap:40px}
+.features-grid{grid-template-columns:1fr}
+.how-steps{grid-template-columns:1fr}
+.pricing-cards{grid-template-columns:1fr}
+.hero h1{font-size:36px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+<div class="container nav-inner">
+<div class="nav-logo">Market<span>Price</span></div>
+<div class="nav-links">
+<a href="#funcionalidades">Funcionalidades</a>
+<a href="#como-funciona">Como funciona</a>
+<a href="#preco">Preço</a>
+<a href="#" class="btn btn-primary" onclick="openModal();return false">Testar grátis</a>
+</div>
+</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+<div class="container">
+<div class="hero-content">
+<div class="hero-badge">
+<span class="badge badge-green"><span class="dot"></span> 30 dias grátis — vagas limitadas</span>
+</div>
+<h1>Pare de <span class="highlight">perder dinheiro</span> comprando celular pelo preço errado</h1>
+<p>O MarketPrice monitora o Facebook Marketplace em tempo real, mostra o preço médio de cada modelo na sua região e te avisa quando aparece uma oportunidade real de lucro. Compara até com o preço do novo no Mercado Livre.</p>
+<div class="hero-cta">
+<a href="#" class="btn btn-primary btn-large" onclick="openModal();return false">Começar teste grátis →</a>
+<a href="#como-funciona" class="btn btn-outline btn-large">Como funciona</a>
+</div>
+<div class="hero-stats">
+<div class="hero-stat">
+<div class="number">2.400+</div>
+<div class="label">Anúncios analisados</div>
+</div>
+<div class="hero-stat">
+<div class="number">R$ 847</div>
+<div class="label">Lucro médio por deal</div>
+</div>
+<div class="hero-stat">
+<div class="number">50+</div>
+<div class="label">Modelos monitorados</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem reveal">
+<div class="container">
+<div class="problem-grid">
+<div class="problem-visual">
+<div class="problem-card bad">
+<div class="tag red">Sem MarketPrice</div>
+<div class="price">iPhone 15 PM 256GB — R$ 3.500</div>
+<div class="desc">"Parece um bom preço, vou comprar pra revender!"</div>
+</div>
+<div class="vs-badge">VS</div>
+<div class="problem-card good">
+<div class="tag green">Com MarketPrice</div>
+<div class="price">Novo lacrado no ML — R$ 3.900</div>
+<div class="desc">Diferença de apenas R$ 400. Ninguém vai comprar um usado quando o novo está logo ali. <strong style="color:var(--red)">NÃO é oportunidade.</strong></div>
+</div>
+</div>
+<div>
+<div class="section-label">O problema</div>
+<h2>Você está comprando celular <span class="red">no escuro</span></h2>
+<p style="font-size:17px;color:var(--text2);line-height:1.8;margin-bottom:24px">Abrir dezenas de anúncios, anotar preços na planilha, tentar adivinhar se o valor do fornecedor deixa margem... Esse processo manual te custa tempo e te faz perder oportunidades reais.</p>
+<p style="font-size:17px;color:var(--text2);line-height:1.8">O pior: sem dados, você pode achar que está fazendo um bom negócio quando na verdade o celular novo está quase no mesmo preço. O MarketPrice resolve isso automaticamente.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FEATURES -->
+<section class="features reveal" id="funcionalidades">
+<div class="container">
+<div class="features-header">
+<div class="section-label">Funcionalidades</div>
+<h2>Tudo que um revendedor precisa</h2>
+<p>De coleta automática a análise com inteligência artificial, o MarketPrice cobre toda a jornada do revendedor.</p>
+</div>
+<div class="features-grid">
+<div class="feature-card reveal">
+<div class="feature-icon green">📊</div>
+<h3>Preço médio em tempo real</h3>
+<p>Extensão Chrome captura automaticamente os preços enquanto você navega no Facebook Marketplace. Sem trabalho manual.</p>
+</div>
+<div class="feature-card reveal">
+<div class="feature-icon amber">🔥</div>
+<h3>Detector de oportunidades</h3>
+<p>Score inteligente de 0-100 identifica anúncios abaixo da média com lucro estimado, margem e tempo de venda.</p>
+</div>
+<div class="feature-card reveal">
+<div class="feature-icon blue">🏷️</div>
+<h3>Comparador com varejo</h3>
+<p>Compara o preço do seminovo com o novo lacrado no Mercado Livre. Nunca mais compre achando que é barato quando o novo está perto.</p>
+</div>
+<div class="feature-card reveal">
+<div class="feature-icon purple">🧠</div>
+<h3>IA consultor de negócios</h3>
+<p>"Devo comprar esse iPhone por R$ 3.800?" — Pergunte à IA e receba uma análise com dados reais do mercado.</p>
+</div>
+<div class="feature-card reveal">
+<div class="feature-icon red">🚩</div>
+<h3>Detector de red flags</h3>
+<p>Identifica anúncios suspeitos: preço muito baixo, descrição vaga, possíveis defeitos ocultos. Proteja seu dinheiro.</p>
+</div>
+<div class="feature-card reveal">
+<div class="feature-icon teal">💰</div>
+<h3>Calculadora de lucro</h3>
+<p>Inclui frete, embalagem, taxa e custos extras. Veja o lucro real antes de comprar, não depois.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how reveal" id="como-funciona">
+<div class="container">
+<div class="how-header">
+<div class="section-label">Como funciona</div>
+<h2>3 passos simples</h2>
+</div>
+<div class="how-steps">
+<div class="how-step reveal">
+<div class="step-number">01</div>
+<h3>Instale a extensão</h3>
+<p>Adicione a extensão no Chrome. Ela roda em segundo plano enquanto você navega normalmente pelo Facebook Marketplace.</p>
+</div>
+<div class="how-step reveal">
+<div class="step-number">02</div>
+<h3>Navegue e capture</h3>
+<p>Pesquise os modelos que te interessam. A extensão captura título, preço, região e condição automaticamente.</p>
+</div>
+<div class="how-step reveal">
+<div class="step-number">03</div>
+<h3>Analise e lucre</h3>
+<p>Abra o dashboard e veja preços médios, oportunidades quentes, comparação com varejo e lucro estimado para cada deal.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- COMPARATOR DEMO -->
+<section class="comparator reveal">
+<div class="container">
+<div class="comparator-header">
+<div class="section-label">Novo</div>
+<h2>Comparador seminovo vs novo</h2>
+<p style="font-size:17px;color:var(--text2);line-height:1.7">Veja em tempo real se o seminovo que você quer comprar realmente vale a pena comparado com um novo lacrado.</p>
+</div>
+<div class="demo-card reveal">
+<div class="demo-header">
+<h3>iPhone 15 Pro Max 256GB</h3>
+<span class="badge badge-green">Análise ao vivo</span>
+</div>
+<div class="demo-body">
+<div class="demo-row">
+<span class="demo-label">Preço do seminovo (Facebook)</span>
+<span class="demo-value">R$ 3.500</span>
+</div>
+<div class="demo-row">
+<span class="demo-label">Preço do novo (Mercado Livre)</span>
+<span class="demo-value">R$ 3.900</span>
+</div>
+<div class="demo-row">
+<span class="demo-label">Diferença</span>
+<span class="demo-value red">Apenas R$ 400 (10,3%)</span>
+</div>
+<div class="demo-row">
+<span class="demo-label">Margem para revenda</span>
+<span class="demo-value red">Inviável</span>
+</div>
+<div class="demo-verdict bad">
+<div class="verdict-text">🔴 Não compensa</div>
+<div class="verdict-desc">O comprador prefere pagar R$ 400 a mais por um novo com garantia e nota fiscal.</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing reveal" id="preco">
+<div class="container">
+<div class="pricing-header">
+<div class="section-label">Preço</div>
+<h2>Simples e transparente</h2>
+<p style="font-size:17px;color:var(--text2)">Comece grátis. Sem cartão de crédito.</p>
+</div>
+<div class="pricing-cards">
+<div class="pricing-card">
+<div class="plan-name">Gratuito</div>
+<div class="plan-price">R$ 0 <span>/mês</span></div>
+<div class="plan-desc">Para quem quer experimentar o básico.</div>
+<ul>
+<li>Preço médio por modelo</li>
+<li>Calculadora de lucro</li>
+<li>Extensão Chrome</li>
+<li>1 região</li>
+</ul>
+<a href="#" class="btn btn-outline" style="width:100%" onclick="openModal();return false">Criar conta grátis</a>
+</div>
+<div class="pricing-card featured">
+<div class="plan-name">Pro</div>
+<div class="plan-price"><span class="old">R$ 49</span>R$ 0 <span>/30 dias</span></div>
+<div class="plan-desc">Acesso completo por 30 dias. Sem compromisso.</div>
+<ul>
+<li>Tudo do plano Gratuito</li>
+<li>Detector de oportunidades (Deal Finder)</li>
+<li>Comparador com varejo (ML)</li>
+<li>IA consultor de negócios</li>
+<li>Red Flag Detector</li>
+<li>Regiões ilimitadas</li>
+<li>Alertas de oportunidade</li>
+</ul>
+<a href="#" class="btn btn-primary" style="width:100%;animation:glow 3s infinite" onclick="openModal();return false">Testar Pro grátis por 30 dias →</a>
+</div>
+</div>
+</div>
+</section>
+
+<!-- URGENCY -->
+<section class="urgency reveal">
+<div class="container">
+<div class="urgency-box">
+<h2>Vagas limitadas para o beta</h2>
+<p>Estamos aceitando apenas 30 revendedores para a fase beta. Acesso total ao plano Pro por 30 dias, sem custo nenhum. Só precisamos do seu feedback.</p>
+<div class="spots-counter">🔥 12 de 30 vagas preenchidas</div>
+<div class="spots-bar"><div class="fill"></div></div>
+<br><br>
+<a href="#" class="btn btn-primary btn-large" onclick="openModal();return false">Garantir minha vaga →</a>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="container">
+<div class="faq-header">
+<h2>Perguntas frequentes</h2>
+</div>
+<div class="faq-list">
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-question">Preciso pagar algo durante o beta?</div>
+<div class="faq-answer">Não. O acesso ao plano Pro é 100% gratuito por 30 dias. Sem cartão de crédito, sem compromisso. Após o período, você pode continuar no plano gratuito ou assinar o Pro.</div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-question">Como a extensão captura os dados?</div>
+<div class="faq-answer">A extensão Chrome lê os dados que já estão visíveis na página do Facebook Marketplace enquanto você navega. Ela não acessa seus dados pessoais e não faz requisições automáticas ao Facebook.</div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-question">Funciona para quais marcas?</div>
+<div class="faq-answer">iPhone (7 ao 16), Samsung Galaxy (S21 ao S25, linha A), Xiaomi (Redmi, Poco, Mi) e Motorola. Estamos expandindo para outras categorias como consoles e notebooks.</div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-question">Funciona em qualquer cidade?</div>
+<div class="faq-answer">Sim! O sistema funciona em qualquer região do Brasil. Os preços são calculados com base nos anúncios da sua região específica no Facebook Marketplace.</div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-question">Como funciona o comparador com varejo?</div>
+<div class="faq-answer">O sistema busca automaticamente o preço do mesmo modelo novo lacrado no Mercado Livre e compara com o preço do seminovo. Se a diferença for menor que 15%, te avisa que não é oportunidade.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+<div class="container">
+<p style="margin-bottom:8px"><strong style="font-family:var(--font-display);font-weight:800">Market<span style="color:var(--green)">Price</span></strong></p>
+<p>Feito para revendedores que levam o negócio a sério.</p>
+<p style="margin-top:16px">© 2026 MarketPrice. Todos os direitos reservados.</p>
+</div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+<div class="modal">
+<button class="modal-close" onclick="closeModal()">×</button>
+<h2>Garanta sua vaga no beta</h2>
+<p>Preencha seus dados e receba acesso ao MarketPrice Pro grátis por 30 dias.</p>
+<form onsubmit="handleSubmit(event)">
+<div class="form-group">
+<label>Nome completo</label>
+<input type="text" placeholder="Seu nome" required>
+</div>
+<div class="form-group">
+<label>E-mail</label>
+<input type="email" placeholder="seu@email.com" required>
+</div>
+<div class="form-group">
+<label>WhatsApp</label>
+<input type="tel" placeholder="(00) 00000-0000" required>
+</div>
+<div class="form-group">
+<label>Cidade / Estado</label>
+<input type="text" placeholder="Ex: Curitiba, PR" required>
+</div>
+<div class="form-group">
+<label>Quantos celulares você revende por mês?</label>
+<select required>
+<option value="">Selecione</option>
+<option>1 a 5</option>
+<option>6 a 15</option>
+<option>16 a 30</option>
+<option>Mais de 30</option>
+</select>
+</div>
+<button type="submit" class="btn btn-primary btn-large form-submit">Quero testar grátis →</button>
+</form>
+<div class="form-note">Sem cartão de crédito. Sem compromisso.</div>
+</div>
+</div>
+
+<script>
+// Nav scroll
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scrollY>50)});
+
+// Reveal on scroll
+const reveals=document.querySelectorAll('.reveal');
+const observer=new IntersectionObserver((entries)=>{
+entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}})
+},{threshold:.1,rootMargin:'0px 0px -40px 0px'});
+reveals.forEach(el=>observer.observe(el));
+
+// Modal
+function openModal(){document.getElementById('modal').classList.add('active');document.body.style.overflow='hidden'}
+function closeModal(){document.getElementById('modal').classList.remove('active');document.body.style.overflow=''}
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+
+// Form
+function handleSubmit(e){
+e.preventDefault();
+const btn=e.target.querySelector('button[type=submit]');
+btn.textContent='Enviando...';btn.disabled=true;
+setTimeout(()=>{
+btn.textContent='✓ Vaga garantida!';
+btn.style.background='#22c55e';
+setTimeout(()=>{closeModal();btn.textContent='Quero testar grátis →';btn.disabled=false},2000);
+},1500);
+}
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+a.addEventListener('click',function(e){
+const target=document.querySelector(this.getAttribute('href'));
+if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'})}
+})
+});
+</script>
+</body>
+</html>

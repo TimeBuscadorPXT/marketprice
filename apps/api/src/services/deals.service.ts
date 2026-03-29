@@ -273,7 +273,7 @@ export async function getDeals(query: DealsQuery): Promise<DealsResponse> {
     }
   }
 
-  // Enrich with retail prices
+  // Enrich with retail prices (cached + auto-fetch missing)
   const modelIds = [...new Set(allDeals.map(d => d.model.id))];
   if (modelIds.length > 0) {
     const retailPrices = await prisma.retailPrice.findMany({
@@ -286,6 +286,36 @@ export async function getDeals(query: DealsQuery): Promise<DealsResponse> {
       distinct: ['modelId'],
     });
     const retailMap = new Map(retailPrices.map(rp => [rp.modelId, rp]));
+
+    // Auto-fetch from ML for models without cached retail prices (fire & forget, limit to 5)
+    const missingModelIds = modelIds.filter(id => !retailMap.has(id));
+    if (missingModelIds.length > 0) {
+      const { scrapeRetailPrices, getLowestRetailPrice } = await import('./retail-scraper.service');
+      const missingModels = await prisma.product.findMany({
+        where: { id: { in: missingModelIds.slice(0, 5) } },
+        select: { id: true, brand: true, name: true, variant: true, category: true },
+      });
+
+      await Promise.allSettled(missingModels.map(async (m) => {
+        try {
+          const scraped = await scrapeRetailPrices(m.brand, m.name, m.variant, m.category);
+          const lowest = getLowestRetailPrice(scraped);
+          if (lowest) {
+            const created = await prisma.retailPrice.create({
+              data: {
+                modelId: m.id,
+                marketplace: lowest.marketplace || 'mercado_livre',
+                price: lowest.price,
+                url: lowest.url || null,
+              },
+            });
+            retailMap.set(m.id, created);
+          }
+        } catch {
+          // Silently skip — don't block deals response
+        }
+      }));
+    }
 
     for (const deal of allDeals) {
       const rp = retailMap.get(deal.model.id);
