@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { getPriceAnalysis } from '@/services/prices';
 import { getVelocity, type VelocityData } from '@/services/analytics';
+import { getRetailComparison, type RetailPriceComparison } from '@/services/retail-prices';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, formatPercent, cn } from '@/lib/utils';
 import { ModelSelector } from '@/components/shared/ModelSelector';
@@ -82,6 +83,12 @@ export default function Calculator() {
     queryKey: ['velocity-calc', state.modelId, state.region],
     queryFn: () => getVelocity(state.modelId, state.region),
     enabled: !!state.modelId && !!state.region,
+  });
+
+  const { data: retailData } = useQuery<RetailPriceComparison>({
+    queryKey: ['retail-calc', state.modelId, state.sellingPrice],
+    queryFn: () => getRetailComparison(state.modelId, state.sellingPrice),
+    enabled: !!state.modelId && state.sellingPrice > 0,
   });
 
   // Auto-fill selling price from suggested price or market average
@@ -404,6 +411,23 @@ export default function Calculator() {
                         {formatCurrency(result.profit * quantity)}
                       </p>
                     </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Retail price reference */}
+              {retailData?.retailPrice && (
+                <Card>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2 text-xs">
+                      <span className="text-[#f0f0f5]/40">Ref. novo (Mercado Livre):</span>
+                      <span className="font-mono text-[#f0f0f5]/60">{formatCurrency(retailData.retailPrice)}</span>
+                    </div>
+                    {state.sellingPrice > retailData.retailPrice * 0.85 && (
+                      <p className="text-xs text-[#fbbf24]">
+                        Preço de venda está próximo do novo ({formatCurrency(retailData.retailPrice)} no ML). Compradores podem preferir o novo.
+                      </p>
+                    )}
                   </div>
                 </Card>
               )}
